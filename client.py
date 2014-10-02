@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-02 14:08:54
+# Last modified   : 2014-10-02 14:22:19
 # Filename        : client.py
 # Description     : 
 from xmlrpclib import ServerProxy, Fault
@@ -15,6 +15,7 @@ from threading import Thread
 from time import sleep
 
 import sys
+
 HEAD_START = 0.1
 SECRET_LENGTH = 100
 
@@ -83,8 +84,9 @@ def main():
         
     url = 'http://localhost:' + cfg.get('global', 'data_port')
 
-    client = Client(url, directory)
+    client = Client(url, directory) 
     client.cmdloop()
 
 if __name__ == "__main__":
     main()
+
