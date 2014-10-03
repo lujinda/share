@@ -10,12 +10,15 @@ share
 > [global]
 
 > \# 监听节点的端口
+
 > listen_port = 1111 
 
 > \# 数据传送的端口
+
 > data_port = 1234
 
 > \# 要共享的目录
+
 > share_dir = /tmp/a
 
 #使用方法
