@@ -2,15 +2,15 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-02 14:15:12
+# Last modified   : 2014-10-03 14:15:34
 # Filename        : core/server.py
 # Description     : from xmlrpclib import ServerProxy, Fault
 from os.path import join, abspath, isfile, basename
 from urlparse import urlparse
 import sys
 import os
-from xmlrpclib import ServerProxy, Fault
-from core.data import get_port
+from xmlrpclib import ServerProxy, Fault, Binary
+from core.data import get_port, get_remote_url
 from SocketServer import ThreadingMixIn
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
@@ -57,7 +57,7 @@ class Node():
         name = join(self.dirname, query)
         if not isfile(name):raise UnhandledQuery
         if not inside(self.dirname, name):raise AccessDenied
-        return open(name).read()
+        return name # 如果在本地，则返回名字
 
     def get_secret(self):
         return self.secret
@@ -65,11 +65,20 @@ class Node():
     def fetch(self, query, secret):
         if secret != self.secret:raise
         result = self.query(query)
-        f = open(join(self.dirname, query), 'w')  # 保存到共享目录
-        f.write(result)
+        url = get_remote_url(result) # 如果是本地会返回None,否则是一个url，根据它来下载
+        if not url:
+            return 0
+        s = ServerProxy(url, allow_none = True)
+        result = s.handle_read(query)
+        f = open(join(self.dirname, query), 'wb')  # 保存到共享目录
+        f.write(result.data)
         f.close()
         return 0
-    
+
+    def handle_read(self, query):
+        name = join(self.dirname, query)
+        return Binary(open(name, 'rb').read())
+
     def ls_dir(self,path='.'):
         dir_tree = []
         os.chdir(self.dirname)
@@ -97,7 +106,7 @@ class Node():
             try:
                 s = ServerProxy(other, allow_none = True)
                 if s.get_secret() in history:continue # 如果secret已经在历史记录中了，就不要再query，这样会成一个死循环,理由见query方法
-                return s.query(query, history)
+                return other, s.query(query, history)
             except Fault, f:
                 if f.faultCode == UNHANDLED:pass
                 else:self.known.remove(other) # 如果不是因为没找到，而是其他原因的异常，则把这个节点删除
