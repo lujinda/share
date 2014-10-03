@@ -2,11 +2,12 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-03 14:15:34
+# Last modified   : 2014-10-03 19:54:04
 # Filename        : core/server.py
 # Description     : from xmlrpclib import ServerProxy, Fault
 from os.path import join, abspath, isfile, basename
 from urlparse import urlparse
+from core.config import config
 import sys
 import os
 from xmlrpclib import ServerProxy, Fault, Binary
@@ -40,8 +41,11 @@ def inside(dirname, name):
 class Node():
     def __init__(self, url , dirname, secret):  # 以url来区分节点
         self.url = url 
+        self.file_temp_list = {}
         self.dirname = dirname
         self.secret = secret
+        self.block_size = int(config().get('global', 
+            'block_size')) * 1024
         self.known = set() # 存放的是节点信息
 
 
@@ -69,15 +73,26 @@ class Node():
         if not url:
             return 0
         s = ServerProxy(url, allow_none = True)
-        result = s.handle_read(query)
         f = open(join(self.dirname, query), 'wb')  # 保存到共享目录
-        f.write(result.data)
+        while True:
+            result = s.handle_read(query, self.secret)
+            if not result:break
+            f.write(result.data)
         f.close()
         return 0
 
-    def handle_read(self, query):
+    def handle_read(self, query, secret):
         name = join(self.dirname, query)
-        return Binary(open(name, 'rb').read())
+        file_id = secret + name
+        if file_id not in self.file_temp_list:
+            self.file_temp_list[file_id] = open(name, 'rb')
+
+        data = self.file_temp_list[file_id].read(self.block_size)
+        if not data:
+            del self.file_temp_list[file_id]
+            return None
+        return Binary(data)
+        #return Binary(open(name, 'rb').read())
 
     def ls_dir(self,path='.'):
         dir_tree = []

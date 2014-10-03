@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-02 14:22:19
+# Last modified   : 2014-10-03 19:22:22
 # Filename        : client.py
 # Description     : 
 from xmlrpclib import ServerProxy, Fault
