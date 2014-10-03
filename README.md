@@ -7,7 +7,8 @@ share
 现在假如有两个节点（启动了client.py文件的机器） a和b，a中的节点列表中有b，同样b中也有，当a尝试着fetch 一个文件时，如果没有在a中查找到的话，则会去找b,但是b中的节点列表是a,b会去找a。。。。。这样就形成了阻塞。原项目中，是通过一个url列表来维护的。但是这个项目中，a机器对于自己的url是localhost,b也是localhost，但是对于a来讲b就不是localhost。所以我的项目中，是通过维护一个secret列表来判断，下一个要查找的节点是不是已经被查过了。但是同时得先知道下一个节点的secret值，但是如果下一节点就是上一个节点的话，还是会有阻塞，所以把xml-rpc做成多线程就很必要了。新构建一个类class ThreadRPC(ThreadingMixIn, SimpleXMLRPCServer)  。这样ThreadRPC就变成了多线程的SimpleXMLRPCServer。
 
 #配置文件
-[global]
+> [global]
+
 > \# 监听节点的端口
 > listen_port = 1111 
 
