@@ -2,11 +2,29 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-02 14:07:54
+# Last modified   : 2014-10-06 18:22:16
 # Filename        : core/sock.py
 # Description     : 
 import socket
 from core.config import config
+import sys
+
+class open_file:
+    def __init__(self, secret, query, host, listen_port):
+        self.secret = secret
+        self.query = query
+        self.__s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.__s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.__s.connect((host, listen_port))
+        self.__s.sendall("read %s %s\n" %  
+                (self.secret, self.query))
+        
+
+    def read(self, block_size = 1024):
+        return self.__s.recv(block_size)
+
+    def close(self):
+        self.__s.close()
 
 class sock:
     def __init__(self):
@@ -28,7 +46,7 @@ class sock:
         self.port = port # 要发送的内容，端口号str
         s_broad = self.__made_broad_sock()
         s_broad.bind(('', 0))
-        s_broad.sendto(self.port, ("255.255.255.255", 
+        s_broad.sendto(self.port, ("172.16.0.255", 
             self.listen_port))
 
         s_broad.close()

@@ -2,8 +2,8 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-03 13:57:31
-# Filename        : /data/github/share/core/data.py
+# Last modified   : 2014-10-04 16:25:41
+# Filename        : share/core/data.py
 # Description     : 
 from urlparse import urlparse
 
@@ -17,12 +17,15 @@ def get_host(url):
     parts = name.split(':')
     return parts[0]
 
-def get_remote_url(result):
+def get_remote_info(result):
     if isinstance(result, str):
-        return None
+        return None, None
 
     while isinstance(result, list) or isinstance(result, tuple):
-        url, result = result
+        secret, url, result = result
 
-    return url
+    return secret, get_host(url)
 
+def parse_line(line):
+    cmd, secret, line = (line.split(' ', 2) + ['', ''])[:3]
+    return cmd.strip(), secret.strip(), line.strip()

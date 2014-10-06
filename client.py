@@ -2,14 +2,16 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-03 19:22:22
+# Last modified   : 2014-10-06 20:23:38
 # Filename        : client.py
 # Description     : 
+
 from xmlrpclib import ServerProxy, Fault
 from cmd import Cmd
 from random import choice
 from string import lowercase
 from core.server import Node, UNHANDLED
+from core.tran_server import TranServer
 from core.data import get_port, get_host
 from threading import Thread
 from time import sleep
@@ -29,31 +31,46 @@ def randomString(length):
 
 class Client(Cmd):
     prompt = '> '
-    def __init__(self, url , dirname):
+
+    def __init__(self, url, dirname):
         Cmd.__init__(self)
         self.url = url
         self.port = get_port(url)  # 这个要当信息广播出去
+        self.dirname = dirname
         self.secret = randomString(SECRET_LENGTH)
-        node = Node(url, dirname, self.secret)
-        t_node = Thread(target = node._start)
+        self.server = ServerProxy(url)
+        self.start_servers()
+
+    def start_servers(self):
+        node = Node(self.url, self.dirname, self.secret)
+        t_node = Thread(target=node._start)
         t_node.setDaemon(True)
         t_node.start()
 
         sleep(HEAD_START)
-        self.server = ServerProxy(url)
-        t_update_known = Thread(target = self.update_known)
+
+        t_update_known = Thread(target=self.update_known)
         t_update_known.setDaemon(True)
         t_update_known.start()
-        
+
+        sleep(HEAD_START)
+
+        tran = TranServer(self.secret, self.dirname)
+        t_tran = Thread(target=tran._start)
+        t_tran.setDaemon(True)
+
+        t_tran.start()
+
     def do_fetch(self, arg):
         try:
             self.server.fetch(arg, self.secret)
         except Fault, f:
-            if f.faultCode != UNHANDLED:raise
+            if f.faultCode != UNHANDLED:
+                raise
             print "Couldn't find the file", arg
 
     def do_ls(self, path):
-        for url,files in self.server.ls().items():
+        for url, files in self.server.ls().items():
             print '%s\n\t%s' % (get_host(url), '\n\t'.join(files))
         
     def update_known(self):
@@ -62,7 +79,7 @@ class Client(Cmd):
         sock.broadcast(str(self.port))  # 把自己的xml-rpc端口广播给别人
         while True:
             url = sock.recv_url()
-            self.server.hello(url, self.secret) # 当收到节点信息时，更新节点
+            self.server.hello(url, self.secret)      # 当收到节点信息时，更新节点
 
     def do_exit(self, arg):
         print
@@ -73,7 +90,7 @@ class Client(Cmd):
 def main():
     import os
     cwd = os.path.dirname(os.path.abspath(sys.argv[0]))
-    os.chdir(cwd) #  切换成程序所在目录
+    os.chdir(cwd)   # 切换成程序所在目录
 
     from core.config import config
     cfg = config()
@@ -89,4 +106,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

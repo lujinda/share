@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-03 19:54:04
+# Last modified   : 2014-10-06 20:33:16
 # Filename        : core/server.py
 # Description     : from xmlrpclib import ServerProxy, Fault
 from os.path import join, abspath, isfile, basename
@@ -11,7 +11,8 @@ from core.config import config
 import sys
 import os
 from xmlrpclib import ServerProxy, Fault, Binary
-from core.data import get_port, get_remote_url
+from core.data import get_port, get_remote_info
+from core.sock import open_file
 from SocketServer import ThreadingMixIn
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
@@ -40,12 +41,15 @@ def inside(dirname, name):
 
 class Node():
     def __init__(self, url , dirname, secret):  # 以url来区分节点
+        cfg = config()
         self.url = url 
         self.file_temp_list = {}
         self.dirname = dirname
         self.secret = secret
-        self.block_size = int(config().get('global', 
-            'block_size')) * 1024
+        self.block_size = int(cfg.get('global', 
+            'block_size')) 
+        self.listen_port = int(cfg.get('global',
+            'listen_port'))
         self.known = set() # 存放的是节点信息
 
 
@@ -66,21 +70,31 @@ class Node():
     def get_secret(self):
         return self.secret
 
+    def open_file(self, query):
+        result = self.query(query)
+        secret, host = get_remote_info(result) # 如果是本地会返回None,否则是一个url，根据它来下载
+        if not host:
+            return 0
+        fd = open_file(secret, query, host, self.listen_port)
+        return fd
+
+
     def fetch(self, query, secret):
         if secret != self.secret:raise
-        result = self.query(query)
-        url = get_remote_url(result) # 如果是本地会返回None,否则是一个url，根据它来下载
-        if not url:
+        fd = self.open_file(query)
+        if not fd: # 如果在本地，就不需要再执行下面的了
             return 0
-        s = ServerProxy(url, allow_none = True)
-        f = open(join(self.dirname, query), 'wb')  # 保存到共享目录
-        while True:
-            result = s.handle_read(query, self.secret)
-            if not result:break
-            f.write(result.data)
-        f.close()
+
+        with open(join(self.dirname, query), 'wb') as to_fd:
+            while True:
+                data  = fd.read(self.block_size)
+                if not data:break
+                to_fd.write(data)
+                #sys.stdout.write(data)
+
         return 0
 
+    # handle_read 方法已over
     def handle_read(self, query, secret):
         name = join(self.dirname, query)
         file_id = secret + name
@@ -91,6 +105,7 @@ class Node():
         if not data:
             del self.file_temp_list[file_id]
             return None
+
         return Binary(data)
         #return Binary(open(name, 'rb').read())
 
@@ -120,8 +135,9 @@ class Node():
         for other in self.known.copy():
             try:
                 s = ServerProxy(other, allow_none = True)
-                if s.get_secret() in history:continue # 如果secret已经在历史记录中了，就不要再query，这样会成一个死循环,理由见query方法
-                return other, s.query(query, history)
+                secret = s.get_secret()
+                if secret in history:continue # 如果secret已经在历史记录中了，就不要再query，这样会成一个死循环,理由见query方法
+                return secret, other, s.query(query, history)
             except Fault, f:
                 if f.faultCode == UNHANDLED:pass
                 else:self.known.remove(other) # 如果不是因为没找到，而是其他原因的异常，则把这个节点删除
