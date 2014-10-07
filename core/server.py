@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-06 20:33:16
+# Last modified   : 2014-10-07 10:58:23
 # Filename        : core/server.py
 # Description     : from xmlrpclib import ServerProxy, Fault
 from os.path import join, abspath, isfile, basename
@@ -79,10 +79,13 @@ class Node():
         return fd
 
 
+
     def fetch(self, query, secret):
         if secret != self.secret:raise
-        fd = self.open_file(query)
-        if not fd: # 如果在本地，就不需要再执行下面的了
+        fd = self.open_file(query) # 打通与远程文件的数据传输通道
+        
+
+        if not fd : # 如果在本地，就不需要再执行下面的了
             return 0
 
         with open(join(self.dirname, query), 'wb') as to_fd:
@@ -91,8 +94,29 @@ class Node():
                 if not data:break
                 to_fd.write(data)
                 #sys.stdout.write(data)
+            
+        fd.close()
+        return 0
+
+    def cat(self, query, read_size):
+        fd = self.open_file(query) or \
+                open(join(self.dirname, query), 'rb')
+
+        if isinstance(read_size, int) and read_size >0: 
+            self.__cat(fd, read_size)
+
+        fd.close()
 
         return 0
+
+    def __cat(self, fd, read_size):
+        for i in xrange(read_size):
+            data = fd.read(1)
+            if not data:
+                break
+            sys.stdout.write(data)
+        sys.stdout.write('\n')
+        sys.stdout.flush()
 
     # handle_read 方法已over
     def handle_read(self, query, secret):

@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-06 20:23:38
+# Last modified   : 2014-10-07 11:51:08
 # Filename        : client.py
 # Description     : 
 
@@ -62,17 +62,25 @@ class Client(Cmd):
         t_tran.start()
 
     def do_fetch(self, arg):
+        self.__do_file('fetch', arg, self.secret)
+
+    def do_cat(self, arg):
+        query, read_size = (arg.split(' ', 1) + ['500'])[:2]
+        self.__do_file('cat', query, int(read_size))
+        
+    def __do_file(self, cmd, *args):
+        func = getattr(self.server, cmd)
         try:
-            self.server.fetch(arg, self.secret)
+            func(*args)
         except Fault, f:
             if f.faultCode != UNHANDLED:
-                raise
-            print "Couldn't find the file", arg
+               raise
+            print 'Couldn\'t find the file', args[0]
 
     def do_ls(self, path):
         for url, files in self.server.ls().items():
             print '%s\n\t%s' % (get_host(url), '\n\t'.join(files))
-        
+
     def update_known(self):
         from core.sock import sock
         sock = sock()

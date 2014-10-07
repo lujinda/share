@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-06 20:23:13
+# Last modified   : 2014-10-07 11:55:21
 # Filename        : core/tran_server.py
 # Description     : 
 import socket
@@ -32,7 +32,7 @@ class Session(StreamRequestHandler):
                 'rb')
         while True:
             t_data = fd.read(self.server.block_size)
-            if self.server.is_shutdown or (not t_data ):
+            if not t_data:
                 break
             self.request.sendall(t_data)
 
@@ -45,7 +45,6 @@ class Server(ThreadingMixIn, TCPServer):
         self.dirname = dirname
         self.block_size = int(config().get('global',
                 'block_size'))
-        self.is_shutdown = False
 
 class TranServer():
     def __init__(self, secret, dirname):
