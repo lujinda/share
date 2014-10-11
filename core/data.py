@@ -2,8 +2,8 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-04 16:25:41
-# Filename        : share/core/data.py
+# Last modified   : 2014-10-11 10:44:51
+# Filename        : core/data.py
 # Description     : 
 from urlparse import urlparse
 
@@ -18,7 +18,7 @@ def get_host(url):
     return parts[0]
 
 def get_remote_info(result):
-    if isinstance(result, str):
+    if isinstance(result, str) or isinstance(result, unicode):
         return None, None
 
     while isinstance(result, list) or isinstance(result, tuple):

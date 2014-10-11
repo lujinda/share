@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-07 10:13:42
+# Last modified   : 2014-10-11 10:26:55
 # Filename        : core/sock.py
 # Description     : 
 import socket

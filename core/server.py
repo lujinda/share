@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-07 10:58:23
+# Last modified   : 2014-10-11 10:42:52
 # Filename        : core/server.py
 # Description     : from xmlrpclib import ServerProxy, Fault
 from os.path import join, abspath, isfile, basename
@@ -83,7 +83,6 @@ class Node():
     def fetch(self, query, secret):
         if secret != self.secret:raise
         fd = self.open_file(query) # 打通与远程文件的数据传输通道
-        
 
         if not fd : # 如果在本地，就不需要再执行下面的了
             return 0
