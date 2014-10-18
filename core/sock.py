@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-11 10:26:55
+# Last modified   : 2014-10-17 14:49:02
 # Filename        : core/sock.py
 # Description     : 
 import socket
@@ -46,7 +46,7 @@ class sock:
         self.port = port # 要发送的内容，端口号str
         s_broad = self.__made_broad_sock()
         s_broad.bind(('', 0))
-        s_broad.sendto(self.port, ("255.255.255.255", 
+        s_broad.sendto(self.port, ("172.17.255.255", 
             self.listen_port))
 
         s_broad.close()

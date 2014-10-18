@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-11 10:38:04
+# Last modified   : 2014-10-18 18:20:14
 # Filename        : client.py
 # Description     : 
 
@@ -65,8 +65,11 @@ class Client(Cmd):
         self.__do_file('fetch', arg, self.secret)
 
     def do_cat(self, arg):
-        query, read_size = (arg.split(' ', 1) + ['500'])[:2]
-        self.__do_file('cat', query, int(read_size))
+        query, read_size =  (arg.split(' ', 2) + ['500'] )[:2]
+        try:
+            self.__do_file('cat', query, int(read_size) )
+        except ValueError:
+            self.do_help(arg)
         
     def __do_file(self, cmd, *args):
         func = getattr(self.server, cmd)

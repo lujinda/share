@@ -2,7 +2,7 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-11 10:42:52
+# Last modified   : 2014-10-18 20:21:28
 # Filename        : core/server.py
 # Description     : from xmlrpclib import ServerProxy, Fault
 from os.path import join, abspath, isfile, basename
@@ -11,7 +11,7 @@ from core.config import config
 import sys
 import os
 from xmlrpclib import ServerProxy, Fault, Binary
-from core.data import get_port, get_remote_info
+from core.data import get_port, get_remote_info, get_host
 from core.sock import open_file
 from SocketServer import ThreadingMixIn
 from SimpleXMLRPCServer import SimpleXMLRPCServer
@@ -67,22 +67,45 @@ class Node():
         if not inside(self.dirname, name):raise AccessDenied
         return name # 如果在本地，则返回名字
 
+    def ip_query(self, query): # 不会去查询known列表
+        return self._handle(query)
+
     def get_secret(self):
         return self.secret
 
+    def _get_query_secret_host(self, query):
+        import re
+        re_ip_query = re.compile(r'^(\d+\.\d+\.\d+\.\d+):(.+)')
+        re_result = re_ip_query.search(query)
+
+        result = None
+        if re_result: # 如果指定了ip地址
+            ip, query = re_result.groups()
+            for url in self.known:
+                if get_host(url) == ip:
+                    result = {url:query}
+                    break
+            if not result:
+                raise UnhandledQuery
+        else:
+            result = self.query(query)
+
+
+        secret, host = get_remote_info(result) # get_remote_info会根据不同得类似得result，给出不同的结果
+        return query, secret, host
+
+    # 传入一个query,返回一个socket fd, 删除ip地址后得query
     def open_file(self, query):
-        result = self.query(query)
-        secret, host = get_remote_info(result) # 如果是本地会返回None,否则是一个url，根据它来下载
+        query, secret, host = self._get_query_secret_host(query) # 如果是本地会返回None,否则是一个url，根据它来下载
         if not host:
-            return 0
-        fd = open_file(secret, query, host, self.listen_port)
-        return fd
+            return 0, query
+        fd = open_file(secret, query, host, self.listen_port) 
+        return fd, query # 这边返回得query，是删除ip地址后和query
 
 
-
-    def fetch(self, query, secret):
+    def fetch(self, query,  secret):
         if secret != self.secret:raise
-        fd = self.open_file(query) # 打通与远程文件的数据传输通道
+        fd, query = self.open_file(query) # 打通与远程文件的数据传输通道
 
         if not fd : # 如果在本地，就不需要再执行下面的了
             return 0
@@ -98,7 +121,7 @@ class Node():
         return 0
 
     def cat(self, query, read_size):
-        fd = self.open_file(query) or \
+        fd = self.open_file(query)[0] or \
                 open(join(self.dirname, query), 'rb')
 
         if isinstance(read_size, int) and read_size >0: 
