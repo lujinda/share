@@ -68,4 +68,5 @@ share
   
   2014-11-1
 
-  添加了setup.py文件。方便把程序安装到系统中，使用方法:sudo python setup.py install
+  添加了setup.py文件。方便把程序安装到系统中，使用方法:sudo python setup.py install 同时也上传到了pypi，安装方法:pip install share
+
