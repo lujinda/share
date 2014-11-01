@@ -65,3 +65,7 @@ share
   2014-10-18
 
   添加查看ip文件内容或下载
+  
+  2014-11-1
+
+  添加了setup.py文件。方便把程序安装到系统中，使用方法:sudo python setup.py install

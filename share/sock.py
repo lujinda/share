@@ -2,11 +2,11 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-17 14:49:02
-# Filename        : core/sock.py
+# Last modified   : 2014-11-01 14:24:30
+# Filename        : share/sock.py
 # Description     : 
 import socket
-from core.config import config
+from share.config import config
 import sys
 
 class open_file:

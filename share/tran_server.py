@@ -2,13 +2,13 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-07 11:55:21
-# Filename        : core/tran_server.py
+# Last modified   : 2014-11-01 14:24:54
+# Filename        : share/tran_server.py
 # Description     : 
 import socket
-from core.data import parse_line
+from share.data import parse_line
 from os.path import join
-from core.config import config
+from share.config import config
 
 from SocketServer import TCPServer, ThreadingMixIn, StreamRequestHandler
 

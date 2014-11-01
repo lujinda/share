@@ -2,17 +2,17 @@
 #coding:utf8
 # Author          : tuxpy
 # Email           : q8886888@qq.com
-# Last modified   : 2014-10-18 20:21:28
-# Filename        : core/server.py
+# Last modified   : 2014-11-01 14:24:16
+# Filename        : share/server.py
 # Description     : from xmlrpclib import ServerProxy, Fault
 from os.path import join, abspath, isfile, basename
 from urlparse import urlparse
-from core.config import config
+from share.config import config
 import sys
 import os
 from xmlrpclib import ServerProxy, Fault, Binary
-from core.data import get_port, get_remote_info, get_host
-from core.sock import open_file
+from share.data import get_port, get_remote_info, get_host
+from share.sock import open_file
 from SocketServer import ThreadingMixIn
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
@@ -94,13 +94,13 @@ class Node():
         secret, host = get_remote_info(result) # get_remote_info会根据不同得类似得result，给出不同的结果
         return query, secret, host
 
-    # 传入一个query,返回一个socket fd, 删除ip地址后得query
+    # 传入一个query,返回一个socket fd
     def open_file(self, query):
         query, secret, host = self._get_query_secret_host(query) # 如果是本地会返回None,否则是一个url，根据它来下载
         if not host:
             return 0, query
         fd = open_file(secret, query, host, self.listen_port) 
-        return fd, query # 这边返回得query，是删除ip地址后和query
+        return fd, query # 这边返回得query，是删除ip地址后的query
 
 
     def fetch(self, query,  secret):
